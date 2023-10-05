@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  web-apache:
+    build:
+      './apache/'
+    ports:
+      - "8080:80"
+    restart: always
+    volumes:
+      - ./src:/var/www/html
+    links:
+      - "db:database"
+  db:
+    build:
+     "./mysql/"
+    environment:
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=appDB
+      - MYSQL_ROOT_PASSWORD=root
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    volumes: 
+      - "./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql"
+
+volumes:
+  src:
+  mysql:
