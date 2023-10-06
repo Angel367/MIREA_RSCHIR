@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  spring-app:
+    build:
+      context: .
+      dockerfile: Dockerfile-Spring
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123456
+    depends_on:
+      - postgres-db
+
+  postgres-db:
+    build:
+      context: .
+      dockerfile: Dockerfile-Postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: postgres
