@@ -1,7 +1,7 @@
 package com.example.egor.Entities;
 
 import lombok.*;
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
 @Table
@@ -21,13 +21,5 @@ public class Client {
     private String password;
 
     public Client() {
-    }
-
-    public Client(Long id, String name, String email, String login, String password) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.login = login;
-        this.password = password;
     }
 }

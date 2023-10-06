@@ -1,7 +1,7 @@
 package com.example.egor.Entities;
 
 import lombok.*;
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
 @Table
@@ -25,16 +25,5 @@ public class Telephone {
     private String name;
 
     public Telephone() {
-    }
-
-    public Telephone(Long id, String manufacturer, int batteryCapacity, String phoneNumber,
-                     String productType, String price, String name) {
-        this.id = id;
-        this.manufacturer = manufacturer;
-        this.batteryCapacity = batteryCapacity;
-        this.phoneNumber = phoneNumber;
-        this.productType = productType;
-        this.price = price;
-        this.name = name;
     }
 }
