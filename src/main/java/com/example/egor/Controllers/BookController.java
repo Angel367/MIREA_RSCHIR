@@ -1,6 +1,6 @@
 package com.example.egor.Controllers;
 import com.example.egor.Repositories.BookRepository;
-import com.example.egor.Entities.Book;
+import com.example.egor.Entities.Products.Book;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +38,7 @@ public class BookController {
     @PostMapping
     public ResponseEntity<Book> createBook(@RequestBody Book book) {
         Book savedBook = bookRepository.save(book);
+        savedBook.setQuantity(book.getQuantity());
         return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
     }
 

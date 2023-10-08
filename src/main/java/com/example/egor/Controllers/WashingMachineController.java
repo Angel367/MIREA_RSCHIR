@@ -1,6 +1,6 @@
 package com.example.egor.Controllers;
 
-import com.example.egor.Entities.WashingMachine;
+import com.example.egor.Entities.Products.WashingMachine;
 import com.example.egor.Repositories.WashingMachineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

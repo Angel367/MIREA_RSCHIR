@@ -1,5 +1,6 @@
-package com.example.egor.Entities;
+package com.example.egor.Entities.Products;
 
+import com.example.egor.Entities.AbstractProduct;
 import lombok.*;
 import javax.persistence.*;
 
@@ -7,11 +8,7 @@ import javax.persistence.*;
 @Table
 @Data
 @Getter @Setter
-public class Telephone {
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long id;
-
+public class Telephone extends AbstractProduct {
     private String manufacturer;
 
     private int batteryCapacity;
@@ -20,9 +17,6 @@ public class Telephone {
 
     private String productType;
 
-    private String price;
-
-    private String name;
 
     public Telephone() {
     }
