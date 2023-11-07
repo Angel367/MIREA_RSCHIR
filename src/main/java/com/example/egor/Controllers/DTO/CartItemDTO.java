@@ -1,8 +1,5 @@
 package com.example.egor.Controllers.DTO;
 
-import com.example.egor.Entities.AbstractProduct;
-import com.example.egor.Entities.Client;
-
 
 public class CartItemDTO {
     private Long id;

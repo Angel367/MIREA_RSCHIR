@@ -1,9 +1,12 @@
 package com.example.egor.Controllers;
+import com.example.egor.Entities.User;
 import com.example.egor.Repositories.BookRepository;
 import com.example.egor.Entities.Products.Book;
+import com.example.egor.Repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +16,10 @@ import java.util.List;
 public class BookController {
 
     private final BookRepository bookRepository;
+    @Autowired
+    AuthenticationController authenticationController;
+    @Autowired
+    RoleRepository roleRepository;
 
     @Autowired
     public BookController(BookRepository bookRepository) {
@@ -36,10 +43,20 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<Book> createBook(@RequestBody Book book) {
-        Book savedBook = bookRepository.save(book);
-        savedBook.setQuantity(book.getQuantity());
-        return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
+    public ResponseEntity<Book> createBook(@RequestHeader("Authorization") String authorizationHeader,
+                                           @RequestBody Book book) {
+        User authenticatedUser = authenticationController.getUserByToken(authorizationHeader);
+        if (authenticatedUser == null) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+        else if (authenticatedUser.getRole() == roleRepository.findByName("ROLE_USER")) {
+            Book savedBook = bookRepository.save(book);
+            savedBook.setQuantity(book.getQuantity());
+            return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
+        }
+        else {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
 
     @PutMapping("/{id}")

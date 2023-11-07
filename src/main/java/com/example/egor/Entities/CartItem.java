@@ -15,7 +15,7 @@ public class CartItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
-    private Client client;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
