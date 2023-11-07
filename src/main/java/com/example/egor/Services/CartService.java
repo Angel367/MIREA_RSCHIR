@@ -64,6 +64,9 @@ public class CartService {
     }
     public String checkout(Client client) {
         List<CartItem> cartItems = cartItemRepository.findAllByClient(client);
+        if (cartItems.isEmpty()) {
+            return "Корзины не существует!";
+        }
         for (CartItem cartItem : cartItems) {
             if (isProductOverSold(cartItem.getAbstractProduct(), 0)) {
                 return "Продукт с id = " + cartItem.getId().toString() + " закончился.";
