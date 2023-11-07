@@ -9,7 +9,9 @@ import javax.persistence.*;
 @Getter @Setter
 public class WashingMachine {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "washing_machine_seq")
+    @SequenceGenerator(name = "washing_machine_seq", sequenceName = "washing_machine_sequence", allocationSize = 1)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     private String manufacturer;

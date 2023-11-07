@@ -9,7 +9,9 @@ import javax.persistence.*;
 @Getter @Setter
 public class Telephone {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "telephone_seq")
+    @SequenceGenerator(name = "telephone_seq", sequenceName = "telephone_sequence", allocationSize = 1)
+    @Column(name = "id", nullable = false)
     private Long id;
 
     private String manufacturer;
