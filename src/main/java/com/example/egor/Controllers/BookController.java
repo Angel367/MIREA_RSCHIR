@@ -43,7 +43,8 @@ public class BookController {
         if (authenticatedUser == null) {
             return new ResponseEntity<>("Некорректный JWT токен",HttpStatus.FORBIDDEN);
         }
-        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") || Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
+        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") ||
+                Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
             book.setQuantity(book.getQuantity());
             book.setSeller(authenticatedUser);
             Book savedBook = bookRepository.save(book);
@@ -68,11 +69,13 @@ public class BookController {
             return new ResponseEntity<>("Некорректный JWT токен",
                     HttpStatus.FORBIDDEN);
         }
-        else if (existingBook.getSeller().getId() != authenticatedUser.getId() || !Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
+        else if (existingBook.getSeller().getId() != authenticatedUser.getId() ||
+                !Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
             return new ResponseEntity<>("Вы не являетесь продавцом этой книги",
                     HttpStatus.FORBIDDEN);
         }
-        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") || Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
+        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") ||
+                Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
             existingBook.setName(updatedBook.getName());
             existingBook.setQuantity(updatedBook.getQuantity());
             existingBook.setAuthor(updatedBook.getAuthor());
@@ -84,17 +87,18 @@ public class BookController {
         else {
             return new ResponseEntity<>("Ваша роль не SELLER", HttpStatus.FORBIDDEN);
         }
-
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteBook(@RequestHeader("Authorization") String authorizationHeader,
                                            @PathVariable Long id) {
         User authenticatedUser = authenticationController.getUserByToken(authorizationHeader);
-        if ((authenticatedUser == null || bookRepository.findById(id).get().getSeller() != authenticatedUser) && !Objects.equals(Objects.requireNonNull(authenticatedUser).getRole(), "ADMIN")) {
+        if ((authenticatedUser == null || bookRepository.findById(id).get().getSeller() != authenticatedUser)
+                && !Objects.equals(Objects.requireNonNull(authenticatedUser).getRole(), "ADMIN")) {
             return new ResponseEntity<>("Некорректный JWT токен или вы не являетесь продавцом этой книги",
                     HttpStatus.FORBIDDEN);
         }
-        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") || (Objects.equals(authenticatedUser.getRole(), "ADMIN"))) {
+        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") ||
+                (Objects.equals(authenticatedUser.getRole(), "ADMIN"))) {
             if (bookRepository.existsById(id)) {
                 bookRepository.deleteById(id);
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);

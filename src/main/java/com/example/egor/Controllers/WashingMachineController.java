@@ -3,7 +3,6 @@ package com.example.egor.Controllers;
 import com.example.egor.Entities.Products.WashingMachine;
 import com.example.egor.Entities.User;
 import com.example.egor.Repositories.WashingMachineRepository;
-import com.example.egor.Controllers.AuthenticationController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +47,7 @@ public class WashingMachineController {
             return new ResponseEntity<>("Некорректный JWT токен", HttpStatus.FORBIDDEN);
         }
         if (Objects.equals(authenticatedUser.getRole(), "SELLER") || Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
+            washingMachine.setSeller(authenticatedUser);
             WashingMachine savedWashingMachine = washingMachineRepository.save(washingMachine);
             return new ResponseEntity<>(savedWashingMachine.toString(), HttpStatus.CREATED);
         } else {
@@ -66,6 +66,9 @@ public class WashingMachineController {
         }
         if (authenticatedUser == null) {
             return new ResponseEntity<>("Некорректный JWT токен", HttpStatus.FORBIDDEN);
+        }
+        if (authenticatedUser.getId() != existingWashingMachine.getSeller().getId()) {
+            return new ResponseEntity<>("Вы не являетесь продавцом этой стиральной машины", HttpStatus.FORBIDDEN);
         }
         if (Objects.equals(authenticatedUser.getRole(), "SELLER") || Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
             existingWashingMachine.setManufacturer(updatedWashingMachine.getManufacturer());

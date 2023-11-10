@@ -47,6 +47,7 @@ public class TelephoneController {
             return new ResponseEntity<>("Некорректный JWT токен", HttpStatus.FORBIDDEN);
         }
         if (Objects.equals(authenticatedUser.getRole(), "SELLER") || (Objects.equals(authenticatedUser.getRole(), "ADMIN"))) {
+            telephone.setSeller(authenticatedUser);
             Telephone savedTelephone = telephoneRepository.save(telephone);
             return new ResponseEntity<>(savedTelephone.toString(), HttpStatus.CREATED);
         } else {
@@ -65,6 +66,9 @@ public class TelephoneController {
         }
         if (authenticatedUser == null) {
             return new ResponseEntity<>("Некорректный JWT токен", HttpStatus.FORBIDDEN);
+        }
+        if (authenticatedUser.getId() != existingTelephone.getSeller().getId()) {
+            return new ResponseEntity<>("Вы не являетесь продавцом этого телефона", HttpStatus.FORBIDDEN);
         }
         if (Objects.equals(authenticatedUser.getRole(), "SELLER") || (Objects.equals(authenticatedUser.getRole(), "ADMIN"))) {
             existingTelephone.setManufacturer(updatedTelephone.getManufacturer());
