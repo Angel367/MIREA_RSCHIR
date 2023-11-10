@@ -79,8 +79,7 @@ public class AuthenticationController {
                     .parseClaimsJws(token);
 
             // Retrieve the session from the database
-            Session session = sessionRepository.findBySessionToken(token)
-                    .orElseThrow(EntityNotFoundException::new);
+            Session session = sessionRepository.getSessionBySessionToken(token);
 
             // Check if the token is expired
             if (claims.getBody().getExpiration().before(new Date())) {
@@ -89,7 +88,7 @@ public class AuthenticationController {
             }
 
             // Get the user details from the session
-            User user = userRepository.findById(session.getId())
+            User user = userRepository.findById(session.getUser().getId())
                     .orElseThrow(EntityNotFoundException::new);
 
             return ResponseEntity.ok("email:" + user.getEmail() +
@@ -111,8 +110,7 @@ public class AuthenticationController {
                     .parseClaimsJws(token);
 
             // Retrieve the session from the database
-            Session session = sessionRepository.findBySessionToken(token)
-                    .orElseThrow(EntityNotFoundException::new);
+            Session session = sessionRepository.getSessionBySessionToken(token);
 
             // Check if the token is expired
             if (claims.getBody().getExpiration().before(new Date())) {
@@ -121,7 +119,7 @@ public class AuthenticationController {
             }
 
             // Get the user details from the session
-            User user = userRepository.findById(session.getId())
+            User user = userRepository.findById(session.getUser().getId())
                     .orElseThrow(EntityNotFoundException::new);
 
             return user;
