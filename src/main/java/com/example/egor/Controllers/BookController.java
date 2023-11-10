@@ -2,24 +2,20 @@ package com.example.egor.Controllers;
 import com.example.egor.Entities.User;
 import com.example.egor.Repositories.BookRepository;
 import com.example.egor.Entities.Products.Book;
-import com.example.egor.Repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/books")
 public class BookController {
-
     private final BookRepository bookRepository;
     @Autowired
     AuthenticationController authenticationController;
-    @Autowired
-    RoleRepository roleRepository;
 
     @Autowired
     public BookController(BookRepository bookRepository) {
@@ -31,7 +27,6 @@ public class BookController {
         List<Book> books = bookRepository.findAll();
         return new ResponseEntity<>(books, HttpStatus.OK);
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<Book> getBookById(@PathVariable Long id) {
         Book book = bookRepository.findById(id).orElse(null);
@@ -41,42 +36,74 @@ public class BookController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
     @PostMapping
-    public ResponseEntity<Book> createBook(@RequestHeader("Authorization") String authorizationHeader,
+    public ResponseEntity<String> createBook(@RequestHeader("Authorization") String authorizationHeader,
                                            @RequestBody Book book) {
         User authenticatedUser = authenticationController.getUserByToken(authorizationHeader);
         if (authenticatedUser == null) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>("Некорректный JWT токен",HttpStatus.FORBIDDEN);
         }
-        else if (authenticatedUser.getRole() == roleRepository.findByName("ROLE_USER")) {
+        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") || Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
+            book.setQuantity(book.getQuantity());
+            book.setSeller(authenticatedUser);
             Book savedBook = bookRepository.save(book);
-            savedBook.setQuantity(book.getQuantity());
-            return new ResponseEntity<>(savedBook, HttpStatus.CREATED);
+            return new ResponseEntity<>(savedBook.toString(), HttpStatus.CREATED);
         }
         else {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>("Ваша роль не SELLER", HttpStatus.FORBIDDEN);
         }
     }
-
     @PutMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
-        if (bookRepository.existsById(id)) {
-            updatedBook.setId(id);
-            Book savedBook = bookRepository.save(updatedBook);
-            return new ResponseEntity<>(savedBook, HttpStatus.OK);
-        } else {
+    public ResponseEntity<String> updateBook(@RequestHeader("Authorization") String authorizationHeader,
+                                           @PathVariable Long id, @RequestBody Book updatedBook) {
+        User authenticatedUser = authenticationController.getUserByToken(authorizationHeader);
+        Book existingBook;
+        if (!bookRepository.existsById(id)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-    }
+        else {
+            existingBook = bookRepository.getById(id);
+        }
+        if (authenticatedUser == null) {
+            return new ResponseEntity<>("Некорректный JWT токен",
+                    HttpStatus.FORBIDDEN);
+        }
+        else if (existingBook.getSeller().getId() != authenticatedUser.getId() || !Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
+            return new ResponseEntity<>("Вы не являетесь продавцом этой книги",
+                    HttpStatus.FORBIDDEN);
+        }
+        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") || Objects.equals(authenticatedUser.getRole(), "ADMIN")) {
+            existingBook.setName(updatedBook.getName());
+            existingBook.setQuantity(updatedBook.getQuantity());
+            existingBook.setAuthor(updatedBook.getAuthor());
+            existingBook.setProductType(updatedBook.getProductType());
+            existingBook.setPrice(updatedBook.getPrice());
+            bookRepository.save(existingBook);
+            return new ResponseEntity<>(existingBook.toString(), HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>("Ваша роль не SELLER", HttpStatus.FORBIDDEN);
+        }
 
+    }
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
-        if (bookRepository.existsById(id)) {
-            bookRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<String> deleteBook(@RequestHeader("Authorization") String authorizationHeader,
+                                           @PathVariable Long id) {
+        User authenticatedUser = authenticationController.getUserByToken(authorizationHeader);
+        if ((authenticatedUser == null || bookRepository.findById(id).get().getSeller() != authenticatedUser) && !Objects.equals(Objects.requireNonNull(authenticatedUser).getRole(), "ADMIN")) {
+            return new ResponseEntity<>("Некорректный JWT токен или вы не являетесь продавцом этой книги",
+                    HttpStatus.FORBIDDEN);
+        }
+        else if (Objects.equals(authenticatedUser.getRole(), "SELLER") || (Objects.equals(authenticatedUser.getRole(), "ADMIN"))) {
+            if (bookRepository.existsById(id)) {
+                bookRepository.deleteById(id);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        }
+        else {
+            return new ResponseEntity<>("Ваша роль не SELLER", HttpStatus.FORBIDDEN);
         }
     }
 }

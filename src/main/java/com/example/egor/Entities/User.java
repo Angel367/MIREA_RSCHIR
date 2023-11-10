@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Indexed;
-import com.example.egor.Entities.Role;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -33,8 +32,7 @@ public class User implements UserDetails {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    private Role role;
+    private String role;
 
     @Column(name = "created_at", nullable = false)
     private Timestamp createdAt;
@@ -117,11 +115,11 @@ public class User implements UserDetails {
         this.passwordHash = passwordHash;
     }
 
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
     }
 
-    public Role getRole() {
+    public String  getRole() {
         return this.role;
     }
 

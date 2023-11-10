@@ -1,7 +1,5 @@
 package com.example.egor.Controllers.DTO;
 
-import com.example.egor.Entities.Role;
-
 public class UserRegistrationDTO {
     private String username;
     private String email;

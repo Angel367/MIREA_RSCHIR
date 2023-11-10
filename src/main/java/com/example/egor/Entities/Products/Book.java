@@ -11,8 +11,6 @@ import javax.persistence.*;
 public class Book extends AbstractProduct {
     private String author;
 
-    private int sellerNumber;
-
     private String productType;
 
     public Book() {

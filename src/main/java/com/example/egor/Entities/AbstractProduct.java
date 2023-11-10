@@ -1,5 +1,7 @@
 package com.example.egor.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,4 +20,7 @@ public abstract class AbstractProduct {
     private String name;
 
     public int quantity;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    public User seller;
 }

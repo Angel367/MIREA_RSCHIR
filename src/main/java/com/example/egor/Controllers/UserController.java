@@ -1,9 +1,7 @@
 package com.example.egor.Controllers;
 
 import com.example.egor.Controllers.DTO.UserRegistrationDTO;
-import com.example.egor.Entities.Role;
 import com.example.egor.Entities.User;
-import com.example.egor.Repositories.RoleRepository;
 import com.example.egor.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,13 +21,9 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private final RoleRepository roleRepository;
-
-    @Autowired
-    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository) {
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.roleRepository = roleRepository;
     }
 
     @PostMapping("/register")
@@ -52,17 +46,7 @@ public class UserController {
         newUser.setUsername(registrationDTO.getUsername());
         newUser.setEmail(registrationDTO.getEmail());
         newUser.setPasswordHash(passwordEncoder.encode(registrationDTO.getPassword()));
-        Role role = roleRepository.findByName(registrationDTO.getRole());
-        if (role == null) {
-            Role newRole = new Role();
-            newRole.setName(registrationDTO.getRole());
-            roleRepository.save(newRole);
-            newUser.setRole(roleRepository.findByName(registrationDTO.getRole()));
-        }
-        else {
-            newUser.setRole(role);
-        }
-
+        newUser.setRole(registrationDTO.getRole());
         LocalDateTime now = LocalDateTime.now();
         Timestamp timestamp = Timestamp.valueOf(now);
         newUser.setCreatedAt(timestamp);

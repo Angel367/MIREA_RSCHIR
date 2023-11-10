@@ -13,8 +13,6 @@ public class WashingMachine extends AbstractProduct {
 
     private int tankCapacity;
 
-    private int sellerNumber;
-
     private String productType;
 
     public WashingMachine() {
