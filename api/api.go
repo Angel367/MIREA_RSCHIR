@@ -76,7 +76,6 @@ func getStudentConcurrent(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			_, err := w.Write([]byte("Cookie отсутствует или не валидна"))
 			if err != nil {
-				print("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW")
 				return
 			}
 		}
