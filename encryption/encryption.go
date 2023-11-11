@@ -1,45 +1,59 @@
 package encryption
 
 import (
+	"MIREA_RSCHIR/config"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"errors"
+	"fmt"
 	"io"
 )
 
-func Encrypt(data []byte, key []byte) ([]byte, error) {
+func EncryptString(stringData string) ([]byte, error) {
+	key := []byte(config.GetKey())
+	data := []byte(stringData)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
-	ciphertext := make([]byte, aes.BlockSize+len(data))
-	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
 		return nil, err
 	}
 
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[aes.BlockSize:], data)
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, err
+	}
 
-	return ciphertext, nil
+	encrypted := gcm.Seal(nonce, nonce, data, nil)
+	return encrypted, nil
 }
 
-func Decrypt(ciphertext []byte, key []byte) ([]byte, error) {
+func DecryptString(encryptedString string) ([]byte, error) {
+	key := []byte(config.GetKey())
+	encrypted := []byte(encryptedString)
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(ciphertext) < aes.BlockSize {
-		return nil, errors.New("ciphertext too short")
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
 	}
-	iv := ciphertext[:aes.BlockSize]
-	ciphertext = ciphertext[aes.BlockSize:]
 
-	mode := cipher.NewCBCDecrypter(block, iv)
-	mode.CryptBlocks(ciphertext, ciphertext)
+	nonceSize := gcm.NonceSize()
+	if len(encrypted) < nonceSize {
+		return nil, fmt.Errorf("encrypted data too short")
+	}
 
-	return ciphertext, nil
+	nonce, ciphertext := encrypted[:nonceSize], encrypted[nonceSize:]
+	decrypted, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return decrypted, nil
 }

@@ -2,33 +2,37 @@ package cookie
 
 import (
 	"MIREA_RSCHIR/encryption"
+	"MIREA_RSCHIR/logger"
+	"encoding/hex"
 	"net/http"
 )
 
-func SetEncryptedCookie(w http.ResponseWriter, name string, value []byte, key []byte) {
-	// Шифруем данные
-	encryptedValue, err := encryption.Encrypt(value, key)
+func SetEncryptedCookie(w http.ResponseWriter, value string) {
+	cookieName := "student_data"
+	logger.Logger.Info("Content to encrypt for cookie: " + value)
+	encryptString, err := encryption.EncryptString(value)
 	if err != nil {
-		// Обработка ошибки
 		return
 	}
-
-	// Устанавливаем зашифрованную куку
+	cookieContent := hex.EncodeToString(encryptString)
+	logger.Logger.Info("Sent encrypted cookie: " + cookieContent)
 	http.SetCookie(w, &http.Cookie{
-		Name:  name,
-		Value: string(encryptedValue),
+		Name:  cookieName,
+		Value: cookieContent,
 	})
 }
 
-func GetEncryptedCookie(r *http.Request, name string, key []byte) ([]byte, error) {
-	// Получаем куку из запроса
-	cookie, err := r.Cookie(name)
+func GetEncryptedCookie(r *http.Request) ([]byte, error) {
+	cookieName := "student_data"
+	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Дешифруем данные куки
-	decryptedValue, err := encryption.Decrypt([]byte(cookie.Value), key)
+	decodedCookieValue, _ := hex.DecodeString(cookie.Value)
+	decryptedValue, err := encryption.DecryptString(string(decodedCookieValue))
+	logger.Logger.Info("Got encrypted cookie: " + cookie.Value)
+	logger.Logger.Info("Decrypted data from cookie: " + string(decryptedValue))
 	if err != nil {
 		return nil, err
 	}

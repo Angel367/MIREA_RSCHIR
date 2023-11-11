@@ -19,7 +19,12 @@ func InitLogger() error {
 		return err
 	}
 
-	defer Logger.Sync()
+	defer func(Logger *zap.Logger) {
+		err := Logger.Sync()
+		if err != nil {
+
+		}
+	}(Logger)
 
 	return nil
 }
