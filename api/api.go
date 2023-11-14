@@ -2,6 +2,7 @@ package api
 
 import (
 	"MIREA_RSCHIR/internal/filestorage"
+	"MIREA_RSCHIR/logger"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,8 +16,19 @@ import (
 
 var client *mongo.Client
 
+func ReadUserIP(r *http.Request) string {
+	IPAddress := r.Header.Get("X-Real-Ip")
+	if IPAddress == "" {
+		IPAddress = r.Header.Get("X-Forwarded-For")
+	}
+	if IPAddress == "" {
+		IPAddress = r.RemoteAddr
+	}
+	return IPAddress
+}
+
 func connectDB() error {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	clientOptions := options.Client().ApplyURI("mongodb://mongodbcont:27017/")
 	var err error
 	client, err = mongo.Connect(context.TODO(), clientOptions)
 	return err
@@ -25,7 +37,8 @@ func connectDB() error {
 func getFilesHandler(w http.ResponseWriter, r *http.Request) {
 	fileList, err := filestorage.GetListOfFiles(client, "mydatabase")
 	if err != nil {
-		http.Error(w, "Error getting list of files", http.StatusInternalServerError)
+		fmt.Println(err)
+		http.Error(w, "Error getting list of files"+fmt.Sprint(err), http.StatusInternalServerError)
 		return
 	}
 	if fileList == nil {
@@ -89,7 +102,6 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("File with ID: " + fileId.Hex() + "uploaded successfully!"))
-	w.WriteHeader(http.StatusOK)
 }
 
 func updateFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +149,7 @@ func deleteFileHandler(w http.ResponseWriter, r *http.Request) {
 func Main() {
 	err := connectDB()
 	if err != nil {
-		fmt.Println("Error connecting to MongoDB:", err)
+		logger.Logger.Error("Error connecting to MongoDB: " + fmt.Sprint(err))
 		return
 	}
 	defer client.Disconnect(context.TODO())

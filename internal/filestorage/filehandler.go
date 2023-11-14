@@ -1,6 +1,7 @@
 package filestorage
 
 import (
+	"MIREA_RSCHIR/logger"
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,14 +15,16 @@ func connectDB() (*mongo.Client, error) {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
+		logger.Logger.Error("Error connecting to MongoDB")
 		return nil, err
 	}
 
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
+		logger.Logger.Error("Error connecting to MongoDB")
 		return nil, err
 	}
-
+	logger.Logger.Info("Connected to database successfully")
 	return client, nil
 }
 
@@ -35,11 +38,13 @@ func GetListOfFiles(client *mongo.Client, dbName string) ([]FileInfo, error) {
 	db := client.Database(dbName)
 	bucket, err := gridfs.NewBucket(db)
 	if err != nil {
+		logger.Logger.Error("Ошибка здесь")
 		return nil, err
 	}
 
 	cursor, err := bucket.Find(context.TODO(), nil)
 	if err != nil {
+		logger.Logger.Error("Нет здесь")
 		return nil, err
 	}
 	defer cursor.Close(context.TODO())
@@ -48,10 +53,12 @@ func GetListOfFiles(client *mongo.Client, dbName string) ([]FileInfo, error) {
 	for cursor.Next(context.TODO()) {
 		var file gridfs.File
 		if err := cursor.Decode(&file); err != nil {
+			logger.Logger.Error("Всё-токи здесь")
 			return nil, err
 		}
 		fileID, ok := file.ID.(primitive.ObjectID)
 		if !ok {
+			logger.Logger.Error("ЗДЕСЬ!!!!!!!!!!")
 			return nil, err // handle the error appropriately
 		}
 		fileList = append(fileList, FileInfo{ID: fileID, Name: file.Name})

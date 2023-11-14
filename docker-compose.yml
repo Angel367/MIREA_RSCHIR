@@ -1,0 +1,29 @@
+# docker-compose.yml
+version: '3'
+
+services:
+  filestorage:
+    build:
+      context: .
+      dockerfile: filestorage.Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DB_URL=mongodb://mongodb:27017/filestorage
+
+  mongodbcont:
+    build:
+      context: .
+      dockerfile: mongodb.Dockerfile
+    ports:
+      - "27017:27017"
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - filestorage
