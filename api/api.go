@@ -35,6 +35,7 @@ func connectDB() error {
 }
 
 func getFilesHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Accepted GET request " + r.RequestURI + " from: " + ReadUserIP(r))
 	fileList, err := filestorage.GetListOfFiles(client, "mydatabase")
 	if err != nil {
 		fmt.Println(err)
@@ -51,6 +52,7 @@ func getFilesHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFileHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Accepted GET request " + r.RequestURI + " from: " + ReadUserIP(r))
 	vars := mux.Vars(r)
 	fileID := vars["id"]
 
@@ -66,6 +68,7 @@ func getFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Accepted GET request " + r.RequestURI + " from: " + ReadUserIP(r))
 	vars := mux.Vars(r)
 	fileID := vars["id"]
 
@@ -81,6 +84,7 @@ func getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Accepted POST request " + r.RequestURI + " from: " + ReadUserIP(r))
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Error reading form file", http.StatusBadRequest)
@@ -105,6 +109,7 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateFileHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Accepted PUT request " + r.RequestURI + " from: " + ReadUserIP(r))
 	vars := mux.Vars(r)
 	fileID := vars["id"]
 
@@ -133,6 +138,7 @@ func updateFileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteFileHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Logger.Info("Accepted DELETE request " + r.RequestURI + " from: " + ReadUserIP(r))
 	vars := mux.Vars(r)
 	fileID := vars["id"]
 
