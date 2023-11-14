@@ -10,5 +10,5 @@ func main() {
 	if err != nil {
 		return
 	}
-	api.StartApi()
+	api.Main()
 }

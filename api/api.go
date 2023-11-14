@@ -1,150 +1,158 @@
 package api
 
 import (
-	"MIREA_RSCHIR/cookie"
-	"MIREA_RSCHIR/logger"
+	"MIREA_RSCHIR/internal/filestorage"
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"io/ioutil"
 	"net/http"
-	"time"
+
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func ReadUserIP(r *http.Request) string {
-	IPAddress := r.Header.Get("X-Real-Ip")
-	if IPAddress == "" {
-		IPAddress = r.Header.Get("X-Forwarded-For")
-	}
-	if IPAddress == "" {
-		IPAddress = r.RemoteAddr
-	}
-	return IPAddress
+var client *mongo.Client
+
+func connectDB() error {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	var err error
+	client, err = mongo.Connect(context.TODO(), clientOptions)
+	return err
 }
 
-type student struct {
-	Age          int     `json:"age"`
-	AverageScore float32 `json:"averageScore"`
-	Name         string  `json:"name"`
-}
-
-var studentData student
-
-func getStudentLinear(w http.ResponseWriter, r *http.Request) {
-	logger.Logger.Info("Accepted GET request " + r.RequestURI + " from: " + ReadUserIP(r))
-	decryptedData, _ := cookie.GetEncryptedCookie(r)
-	if string(decryptedData) == "" {
-		w.WriteHeader(http.StatusNotFound)
-		_, err := w.Write([]byte("Cookie отсутствует или не валидна"))
-		if err != nil {
-			return
-		}
+func getFilesHandler(w http.ResponseWriter, r *http.Request) {
+	fileList, err := filestorage.GetListOfFiles(client, "mydatabase")
+	if err != nil {
+		http.Error(w, "Error getting list of files", http.StatusInternalServerError)
+		return
+	}
+	if fileList == nil {
+		http.Error(w, "[]", http.StatusNotFound)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_, err := w.Write(decryptedData)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(fileList)
+}
+
+func getFileHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	fileID := vars["id"]
+
+	fileContent, err := filestorage.GetFileByID(client, "mydatabase", fileID)
 	if err != nil {
+		http.Error(w, "No file with this ID", http.StatusNotFound)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.WriteHeader(http.StatusOK)
+	w.Write(fileContent)
 }
 
-func createStudentLinear(w http.ResponseWriter, r *http.Request) {
-	logger.Logger.Info("Accepted POST request " + r.RequestURI + " from: " + ReadUserIP(r))
-	data, _ := cookie.GetEncryptedCookie(r)
-	if string(data) != "" {
-		w.WriteHeader(http.StatusConflict)
-		return
-	}
+func getFileInfoHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	fileID := vars["id"]
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&studentData)
+	fileInfo, err := filestorage.GetFileInfoByID(client, "mydatabase", fileID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "No file with this ID", http.StatusNotFound)
 		return
 	}
-	b, err := json.Marshal(studentData)
 
-	cookie.SetEncryptedCookie(w, string(b))
-	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(fileInfo)
 }
 
-func getStudentConcurrent(w http.ResponseWriter, r *http.Request) {
-	logger.Logger.Info("Accepted GET request " + r.RequestURI + " from: " + ReadUserIP(r))
-	done := make(chan bool)
-	go func() {
-		decryptedData, _ := cookie.GetEncryptedCookie(r)
-		if string(decryptedData) == "" {
-			w.WriteHeader(http.StatusNotFound)
-			_, err := w.Write([]byte("Cookie отсутствует или не валидна"))
-			if err != nil {
-				return
-			}
-		}
+func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Error reading form file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
 
-		// Имитация работы в горутине с time.Sleep()
-		time.Sleep(1 * time.Second)
+	fileContent, err := ioutil.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Error reading file content", http.StatusBadRequest)
+		return
+	}
 
-		w.Header().Set("Content-Type", "application/json")
-		_, err := w.Write(decryptedData)
-		if err != nil {
-			return
-		}
-		done <- true
-	}()
-	<-done
+	fileName := handler.Filename
+	fileId, err := filestorage.UploadFile(client, "mydatabase", fileName, fileContent)
+	if err != nil {
+		http.Error(w, "Error uploading file", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("File with ID: " + fileId.Hex() + "uploaded successfully!"))
+	w.WriteHeader(http.StatusOK)
 }
 
-func createStudentConcurrent(w http.ResponseWriter, r *http.Request) {
-	logger.Logger.Info("Accepted POST request " + r.RequestURI + " from: " + ReadUserIP(r))
-	done := make(chan bool)
-	go func() {
-		data, _ := cookie.GetEncryptedCookie(r)
-		if string(data) != "" {
-			w.WriteHeader(http.StatusConflict)
-			done <- true
-			return
-		}
+func updateFileHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	fileID := vars["id"]
 
-		var studentData student
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(&studentData)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		b, err := json.Marshal(studentData)
+	file, handler, err := r.FormFile("file")
+	fileName := handler.Filename
+	if err != nil {
+		http.Error(w, "Error reading form file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
 
-		// Имитация работы в горутине с time.Sleep()
-		time.Sleep(1 * time.Second)
+	fileContent, err := ioutil.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Error reading file content", http.StatusInternalServerError)
+		return
+	}
 
-		cookie.SetEncryptedCookie(w, string(b))
-		w.WriteHeader(http.StatusCreated)
-		done <- true
-	}()
-	<-done
+	err = filestorage.UpdateFileByID(client, "mydatabase", fileID, fileName, string(fileContent))
+	if err != nil {
+		http.Error(w, "Error updating file by ID", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte("File updated successfully!"))
+	w.WriteHeader(http.StatusOK)
 }
 
-func StartApi() {
-	http.HandleFunc("/api/student/linear", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			getStudentLinear(w, r)
-		case http.MethodPost:
-			createStudentLinear(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-	http.HandleFunc("/api/student/concurrent", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			getStudentConcurrent(w, r)
-		case http.MethodPost:
-			createStudentConcurrent(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+func deleteFileHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	fileID := vars["id"]
 
-	fmt.Println("Server is running on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	err := filestorage.DeleteFileByID(client, "mydatabase", fileID)
+	if err != nil {
+		http.Error(w, "No file with this ID", http.StatusNotFound)
+		return
+	}
+
+	w.Write([]byte("File deleted successfully!"))
+	w.WriteHeader(http.StatusOK)
+}
+
+func Main() {
+	err := connectDB()
+	if err != nil {
+		fmt.Println("Error connecting to MongoDB:", err)
+		return
+	}
+	defer client.Disconnect(context.TODO())
+
+	r := mux.NewRouter()
+
+	r.HandleFunc("/files", getFilesHandler).Methods("GET")
+	r.HandleFunc("/files/{id}", getFileHandler).Methods("GET")
+	r.HandleFunc("/files/{id}/info", getFileInfoHandler).Methods("GET")
+	r.HandleFunc("/files", uploadFileHandler).Methods("POST")
+	r.HandleFunc("/files/{id}", updateFileHandler).Methods("PUT")
+	r.HandleFunc("/files/{id}", deleteFileHandler).Methods("DELETE")
+
+	http.Handle("/", r)
+
+	fmt.Println("Server is running on :8080")
+	http.ListenAndServe(":8080", nil)
 }
