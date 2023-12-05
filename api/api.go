@@ -49,11 +49,11 @@ func getStudentLinear(w http.ResponseWriter, r *http.Request) {
 
 func createStudentLinear(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Accepted POST request " + r.RequestURI + " from: " + ReadUserIP(r))
-	data, _ := cookie.GetEncryptedCookie(r)
-	if string(data) != "" {
-		w.WriteHeader(http.StatusConflict)
-		return
-	}
+	//data, _ := cookie.GetEncryptedCookie(r)
+	//if string(data) != "" {
+	//	w.WriteHeader(http.StatusConflict)
+	//	return
+	//}
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&studentData)
