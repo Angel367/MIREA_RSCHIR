@@ -1,0 +1,34 @@
+syntax = "proto3";
+import "google/api/annotations.proto";
+option go_package = "protobuf/grpc;auth";
+
+service AuthService{
+  rpc Login(LoginForm) returns (Response){
+    option (google.api.http) = {
+      post: "/login",
+      body: "*"
+    };
+  }
+  rpc Registration(RegistrationForm) returns (Response){
+    option (google.api.http) = {
+      post: "/registration",
+      body: "*"
+    };
+  }
+}
+
+message LoginForm {
+  string login = 1;
+  string password = 2;
+}
+
+message RegistrationForm {
+  string username = 1;
+  string login = 2;
+  string password = 3;
+}
+
+message Response{
+  string token = 1;
+}
+

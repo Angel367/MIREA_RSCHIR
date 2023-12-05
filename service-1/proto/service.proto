@@ -1,0 +1,66 @@
+syntax = "proto3";
+package service1;
+option go_package = "protobuf/grpc;pb";
+import "google/api/annotations.proto";
+
+service BookMicroservice{
+  rpc CreateBook(BookForm) returns (Response){
+    option (google.api.http) = {
+      post: "/books",
+      body: "*"
+    };
+  }
+  rpc UpdateBook(BookInDb) returns (Response) {
+    option (google.api.http) = {
+      put: "/books/{id}",
+      body: "*"
+    };
+  }
+  rpc DeleteBook(BookID) returns (Response) {
+    option (google.api.http) = {
+      delete: "/books/{id}"
+    };
+  }
+  rpc GetAllBooks(EmptyForm) returns (ResponseArray) {
+    option (google.api.http) = {
+      get: "/books"
+    };
+  }
+  rpc GetOneBook(BookID) returns (Response) {
+    option (google.api.http) = {
+      get: "/books/{id}"
+    };
+  }
+}
+
+message BookForm {
+  string author = 1;
+  int32 seller_id = 2;
+  int32 price = 3;
+  string name = 4;
+}
+
+message EmptyForm {}
+
+message BookID {
+  int64 id = 1;
+}
+
+message BookInDb {
+  int64 id = 1;
+  string author = 2;
+  int32 seller_id = 3;
+  int32 price = 4;
+  string name = 5;
+}
+
+message ResponseArray{
+  repeated BookInDb books = 1;
+  string status = 2;
+}
+
+message Response {
+  BookInDb book = 1;
+  string status = 2;
+}
+

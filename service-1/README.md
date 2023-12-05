@@ -1,0 +1,1 @@
+protoc -I ./service-1/proto --go_out=./gateway/gen/go/book --go_opt=paths=source_relative --go-grpc_out=./gateway/gen/go/book --go-grpc_opt=paths=source_relative ./service-1/proto/service.proto

@@ -1,0 +1,43 @@
+version: '1'
+
+
+services:
+  nginx:
+    container_name: nginx
+    image: nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./deployment/nginx-conf/vhost.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - gateway
+
+  gateway:
+    container_name: gateway
+    build: ./gateway
+    image: gateway
+    depends_on:
+      - microservice-1
+      - microservice-2
+
+  microservice-1:
+    container_name: book-service
+    build: ./service-1/
+    image: golang-grpc
+    depends_on:
+      - postgres
+
+  microservice-2:
+    container_name: auth
+    build: ./service-2/
+    image: go-grpc
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+        POSTGRES_PASSWORD: admin
+    ports:
+      - 5435:5432
