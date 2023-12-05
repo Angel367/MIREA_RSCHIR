@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  # Django service
+  django:
+    image: python:3.8  # Используем образ Python
+    working_dir: /app/MIREA_RSCHIR  # Устанавливаем рабочую директорию
+    command: bash -c "pip install -r requirements.txt && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./MIREA_RSCHIR:/app/MIREA_RSCHIR  # Монтируем код Django
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres  # Зависимость от сервиса PostgreSQL
+
+  # Go service
+  go:
+    image: golang:1.21  # Используем образ Go
+    working_dir: /app/go-service  # Устанавливаем рабочую директорию
+    command: go run main.go
+    volumes:
+      - ./go-service:/app/go-service  # Монтируем код Go
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres  # Зависимость от сервиса PostgreSQL
+
+  # PostgreSQL service
+  postgres:
+    image: postgres:latest  # Используем образ PostgreSQL
+    environment:
+      POSTGRES_DB: postgres  # Название базы данных
+      POSTGRES_USER: postgres  # Имя пользователя
+      POSTGRES_PASSWORD: 123456  # Пароль
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Сохраняем данные PostgreSQL
+
+volumes:
+  postgres_data:  # Объявляем том для данных PostgreSQL

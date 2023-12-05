@@ -1,0 +1,5 @@
+<form method="post" action="{% url 'write_server_page' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
