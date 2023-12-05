@@ -1,7 +1,6 @@
 version: '3'
 
 services:
-  # Django service
   django:
     image: python:3.8  # Используем образ Python
     working_dir: /app/MIREA_RSCHIR  # Устанавливаем рабочую директорию
@@ -13,7 +12,6 @@ services:
     depends_on:
       - postgres  # Зависимость от сервиса PostgreSQL
 
-  # Go service
   go:
     image: golang:1.21  # Используем образ Go
     working_dir: /app/go-service  # Устанавливаем рабочую директорию
@@ -25,7 +23,6 @@ services:
     depends_on:
       - postgres  # Зависимость от сервиса PostgreSQL
 
-  # PostgreSQL service
   postgres:
     image: postgres:latest  # Используем образ PostgreSQL
     environment:

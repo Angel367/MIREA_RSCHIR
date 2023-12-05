@@ -33,21 +33,17 @@ def create_view(request, name):
     plt.xlabel('Category')
     plt.ylabel('Value')
     plt.title('Bar Chart of Age and Average Score')
-
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)
     image = Image.open(buffer)
     image_model = ImageModel()
-
-    # Сохраните изображение в поле ImageField
     buffer = BytesIO()
-    image.save(buffer, format='PNG')  # Сохраняем изображение в буфер
+    image.save(buffer, format='PNG')
     image_model.image.save('scatter_plot.png',
                            ContentFile(buffer.getvalue()))  # Используем ContentFile для записи данных из буфера
     image_model.name = "A" + str(data['age']) + "AS" + str(data['averageScore'])
     buffer.close()
-    # Сохраните модель
     image_model.save()
     plt.close()
 
