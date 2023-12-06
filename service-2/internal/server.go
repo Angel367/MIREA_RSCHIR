@@ -2,10 +2,13 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github/service2/gen/go"
 	"github/service2/internal/db"
 	"github/service2/internal/model"
+	"gorm.io/gorm"
+	"log"
 	"os"
 	"time"
 )
@@ -19,23 +22,51 @@ type Server struct {
 func (s *Server) Login(_ context.Context, in *auth.LoginForm) (*auth.Response, error) {
 	db, err := db.Init()
 	if err != nil {
+		log.Printf("Ошибка в бд")
 		return nil, err
 	}
 
 	err = db.AutoMigrate(&model.User{})
 	if err != nil {
+		log.Printf("Ошибка в бд")
 		return nil, err
+	}
+
+	if in.GetLogin() == "" || in.GetPassword() == "" {
+		log.Printf("Некорректный запрос")
+		return &auth.Response{
+			Token: "Некорректный запрос",
+		}, nil
 	}
 
 	user := &model.User{
 		Login:    in.GetLogin(),
 		Password: in.GetPassword(),
 	}
-
+	log.Printf("LOGIN " + in.GetLogin())
 	result := db.First(&user)
+
 	if result.Error != nil {
+		// Обработка ошибки при выполнении запроса
+		log.Printf("Ошибка при выполнении запроса к базе данных: %v", result.Error)
 		return nil, result.Error
 	}
+	log.Printf("USERNAME " + user.Username)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		// Запись не найдена
+		log.Printf("Такой пользователь не найден")
+		return &auth.Response{
+			Token: "Пользователь не найден",
+		}, nil
+	}
+
+	var users []model.User
+
+	for _, user := range users {
+		log.Printf("ID: %d, Имя: %s, Логин: %s", user.ID, user.Username, user.Login)
+	}
+
+	// Здесь можно использовать данные пользователя из переменной `user`
 
 	payload := jwt.MapClaims{
 		"sub": user.ID,
@@ -51,19 +82,26 @@ func (s *Server) Login(_ context.Context, in *auth.LoginForm) (*auth.Response, e
 	return &auth.Response{
 		Token: t,
 	}, nil
-
-	return &auth.Response{Token: "1"}, nil
 }
 
 func (s *Server) Registration(_ context.Context, in *auth.RegistrationForm) (*auth.Response, error) {
 	db, err := db.Init()
 	if err != nil {
+		log.Printf("Ошибка в бд")
 		return nil, err
 	}
 
 	err = db.AutoMigrate(&model.User{})
 	if err != nil {
+		log.Printf("Ошибка в бд")
 		return nil, err
+	}
+
+	if in.GetLogin() == "" || in.GetUsername() == "" || in.GetPassword() == "" {
+		log.Printf("Некорректный запрос")
+		return &auth.Response{
+			Token: "Некорректный запрос",
+		}, nil
 	}
 
 	user := &model.User{
@@ -72,7 +110,11 @@ func (s *Server) Registration(_ context.Context, in *auth.RegistrationForm) (*au
 		Password: in.GetPassword(),
 	}
 
-	db.Create(user)
+	result := db.Create(user)
+	if result.Error != nil {
+		log.Fatal("Ошибка при создании пользователя")
+		return nil, result.Error
+	}
 
 	payload := jwt.MapClaims{
 		"sub": user.ID,
@@ -83,8 +125,9 @@ func (s *Server) Registration(_ context.Context, in *auth.RegistrationForm) (*au
 
 	t, err := token.SignedString(jwtSecretKey)
 	if err != nil {
-		return &auth.Response{}, err
+		return nil, err
 	}
+
 	return &auth.Response{
 		Token: t,
 	}, nil
