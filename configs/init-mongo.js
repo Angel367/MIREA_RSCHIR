@@ -1,9 +1,8 @@
-// init-mongo.js
 db = db.getSiblingDB('filestorage');
 
 db.createUser({
-    user: "yourusername",
-    pwd: "yourpassword",
+    user: "admin",
+    pwd: "admin",
     roles: [{ role: "readWrite", db: "filestorage" }]
 });
 
