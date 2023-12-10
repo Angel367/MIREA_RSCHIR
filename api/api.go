@@ -49,11 +49,11 @@ func getStudentLinear(w http.ResponseWriter, r *http.Request) {
 
 func createStudentLinear(w http.ResponseWriter, r *http.Request) {
 	logger.Logger.Info("Accepted POST request " + r.RequestURI + " from: " + ReadUserIP(r))
-	//data, _ := cookie.GetEncryptedCookie(r)
-	//if string(data) != "" {
-	//	w.WriteHeader(http.StatusConflict)
-	//	return
-	//}
+	data, _ := cookie.GetEncryptedCookie(r)
+	if string(data) != "" {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
 
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&studentData)
@@ -103,7 +103,6 @@ func createStudentConcurrent(w http.ResponseWriter, r *http.Request) {
 			done <- true
 			return
 		}
-
 		var studentData student
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&studentData)
@@ -112,17 +111,13 @@ func createStudentConcurrent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		b, err := json.Marshal(studentData)
-
-		// Имитация работы в горутине с time.Sleep()
 		time.Sleep(1 * time.Second)
-
 		cookie.SetEncryptedCookie(w, string(b))
 		w.WriteHeader(http.StatusCreated)
 		done <- true
 	}()
 	<-done
 }
-
 func StartApi() {
 	http.HandleFunc("/api/student/linear", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -144,7 +139,6 @@ func StartApi() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	fmt.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
