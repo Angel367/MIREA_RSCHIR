@@ -15,8 +15,6 @@ import (
 )
 
 var (
-	// command-line options:
-	// gRPC server endpoint
 	grpcBookServerEndpoint = flag.String("grpc-book-endpoint", "microservice-1:3000", "gRPC server endpoint")
 
 	grpcAuthServerEndpoint = flag.String("grpc-auth-endpoint", "microservice-2:5000", "gRPC server endpoint")
@@ -31,8 +29,6 @@ func run() error {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	// Register gRPC server endpoint
-	// Note: Make sure the gRPC server is running properly and accessible
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	err = pb.RegisterBookMicroserviceHandlerFromEndpoint(ctx, mux, *grpcBookServerEndpoint, opts)
@@ -46,7 +42,6 @@ func run() error {
 	}
 
 	log.Println("Server listening : localhost:" + os.Getenv("PORT"))
-	// Start HTTP server (and proxy calls to gRPC server endpoint)
 	return http.ListenAndServe(":"+os.Getenv("PORT"), mux)
 }
 

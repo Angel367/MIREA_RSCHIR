@@ -49,9 +49,7 @@ func (s *Server) UpdateBook(ctx context.Context, in *pb.BookInDb) (*pb.Response,
 	if err != nil {
 		return nil, err
 	}
-
 	book := new(model.Book)
-
 	result := db.First(&book, in.GetId())
 	if result.Error != nil {
 		return nil, result.Error
@@ -61,9 +59,7 @@ func (s *Server) UpdateBook(ctx context.Context, in *pb.BookInDb) (*pb.Response,
 	book.SellerId = in.GetSellerId()
 	book.Price = in.GetPrice()
 	book.Name = in.GetName()
-
 	db.Save(&book)
-
 	return &pb.Response{
 		Book: &pb.BookInDb{
 			Id:       int64(book.ID),
@@ -81,16 +77,12 @@ func (s *Server) DeleteBook(ctx context.Context, in *pb.BookID) (*pb.Response, e
 	if err != nil {
 		return nil, err
 	}
-
 	book := new(model.Book)
-
 	result := db.First(&book, in.GetId())
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	db.Delete(book)
-
 	return &pb.Response{
 		Book: &pb.BookInDb{
 			Id:       int64(book.ID),
@@ -108,17 +100,12 @@ func (s *Server) GetAllBooks(ctx context.Context, in *pb.EmptyForm) (*pb.Respons
 	if err != nil {
 		return nil, err
 	}
-
 	var books []model.Book
-
 	result := db.Find(&books)
-
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	booksInBb := []*pb.BookInDb{}
-
 	for _, book := range books {
 		booksInBb = append(booksInBb, &pb.BookInDb{
 			Id:       int64(book.ID),
@@ -139,14 +126,11 @@ func (s *Server) GetOneBook(ctx context.Context, in *pb.BookID) (*pb.Response, e
 	if err != nil {
 		return nil, err
 	}
-
 	book := new(model.Book)
-
 	result := db.First(&book, in.GetId())
 	if result.Error != nil {
 		return nil, result.Error
 	}
-
 	return &pb.Response{
 		Book: &pb.BookInDb{
 			Id:       int64(book.ID),
